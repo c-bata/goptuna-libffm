@@ -58,9 +58,8 @@ func objective(trial goptuna.Trial) (float64, error) {
 	)
 	out := &bytes.Buffer{}
 	cmd.Stdout = out
-	if err = cmd.Run(); err != nil {
-		return -1, err
-	}
+
+	_ = cmd.Run() // ignore because exited with 1
 
 	var result struct {
 		BestIteration int     `json:"best_iteration"`
@@ -118,7 +117,7 @@ func main() {
 		})
 	}
 	if err := eg.Wait(); err != nil {
-		log.Fatal("got error while optimize")
+		log.Fatalf("got error while optimize: %s", err)
 	}
 
 	v, err := study.GetBestValue()
