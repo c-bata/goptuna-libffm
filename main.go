@@ -94,6 +94,7 @@ func main() {
 		logger.Fatal("failed to open db", zap.Error(err))
 	}
 	defer db.Close()
+    db.DB().SetMaxOpenConns(1)
 	storage := rdb.NewStorage(db)
 
 	study, err := goptuna.LoadStudy(

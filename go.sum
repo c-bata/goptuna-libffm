@@ -16,6 +16,8 @@ github.com/c-bata/goptuna v0.0.4-0.20190814031609-1ff327398665 h1:JzLza1WsZM+lPC
 github.com/c-bata/goptuna v0.0.4-0.20190814031609-1ff327398665/go.mod h1:J3AP2Xo0+vHUTf7P8lQOwddOeSMkAFOmz6jrHSxsAcE=
 github.com/c-bata/goptuna v0.0.4-0.20190814054850-5cc05371a95c h1:7PNzpKtjT0he4yWOOUrP8HfYUV2A6CMuz43DrCtO3lI=
 github.com/c-bata/goptuna v0.0.4-0.20190814054850-5cc05371a95c/go.mod h1:J3AP2Xo0+vHUTf7P8lQOwddOeSMkAFOmz6jrHSxsAcE=
+github.com/c-bata/goptuna v0.0.4-0.20190814165155-d071280b59af h1:qaqiU9Eo7/RMKMGk6nZXL5WptLFey+OADbxO35+78Eg=
+github.com/c-bata/goptuna v0.0.4-0.20190814165155-d071280b59af/go.mod h1:J3AP2Xo0+vHUTf7P8lQOwddOeSMkAFOmz6jrHSxsAcE=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
 github.com/coreos/go-etcd v2.0.0+incompatible/go.mod h1:Jez6KQU2B/sWsbdaef3ED8NzMklzPG4d5KIOhIy30Tk=
