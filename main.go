@@ -100,11 +100,10 @@ func main() {
 	defer db.Close()
 	storage := rdb.NewStorage(db)
 
-	study, err := goptuna.CreateStudy(
+	study, err := goptuna.LoadStudy(
 		"goptuna-libffm",
 		goptuna.StudyOptionStorage(storage),
 		goptuna.StudyOptionSampler(tpe.NewSampler()),
-		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
 		goptuna.StudyOptionSetLogger(logger),
 	)
 	if err != nil {
