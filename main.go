@@ -41,12 +41,8 @@ func objective(trial goptuna.Trial) (float64, error) {
 	}
 	jsonMetaPath := getMetaPath(number)
 
-	libffm := os.Getenv("LIBFFM_CLI")
-	if libffm == "" {
-		libffm = "./ffm-train"
-	}
-
-	cmd := exec.Command(libffm,
+	cmd := exec.Command(
+		"./ffm-train",
 		"-p", "./data/valid2.txt",
 		"--auto-stop", "--auto-stop-threshold", "3",
 		"-l", fmt.Sprintf("%f", lmd),
@@ -56,10 +52,12 @@ func objective(trial goptuna.Trial) (float64, error) {
 		"--json-meta", jsonMetaPath,
 		"./data/train2.txt",
 	)
-	out := &bytes.Buffer{}
-	cmd.Stdout = out
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
 
-	_ = cmd.Run() // ignore because exited with 1
+	_ = cmd.Run() // ignore because ffm-train exited with 1 when enabling early stopping.
 
 	var result struct {
 		BestIteration int     `json:"best_iteration"`
@@ -68,20 +66,19 @@ func objective(trial goptuna.Trial) (float64, error) {
 
 	jsonStr, err := ioutil.ReadFile(jsonMetaPath)
 	if err != nil {
-		return -1, err
+		return -1, fmt.Errorf("failed to read json: %s", err)
 	}
 	err = json.Unmarshal(jsonStr, &result)
 	if err != nil {
-		return -1, err
+		return -1, fmt.Errorf("failed to read json: %s", err)
 	}
 	if result.BestIteration == 0 && result.BestVALoss == 0 {
 		return -1, errors.New("failed to open json meta")
 	}
 
-	err = trial.SetUserAttr("best_iteration", fmt.Sprintf("%d", result.BestIteration))
-	if err != nil {
-		return -1, err
-	}
+	_ = trial.SetUserAttr("best_iteration", fmt.Sprintf("%d", result.BestIteration))
+	_ = trial.SetUserAttr("stdout", stdout.String())
+	_ = trial.SetUserAttr("stderr", stderr.String())
 	return result.BestVALoss, nil
 }
 
