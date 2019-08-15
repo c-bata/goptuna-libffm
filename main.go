@@ -7,24 +7,21 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"runtime"
+	"sync"
+	"syscall"
 
 	"github.com/c-bata/goptuna"
 	"github.com/c-bata/goptuna/rdb"
 	"github.com/c-bata/goptuna/tpe"
 	"github.com/jinzhu/gorm"
 	"go.uber.org/zap"
-	"golang.org/x/sync/errgroup"
 
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
-
-func getMetaPath(trialNumber int) string {
-	return fmt.Sprintf("./data/optuna/ffm-meta-%d.json", trialNumber)
-}
 
 func objective(trial goptuna.Trial) (float64, error) {
 	lmd, err := trial.SuggestLogUniform("lambda", 1e-6, 1)
@@ -35,19 +32,25 @@ func objective(trial goptuna.Trial) (float64, error) {
 	if err != nil {
 		return -1, err
 	}
+	latent, err := trial.SuggestInt("latent", 1, 16)
+	if err != nil {
+		return -1, err
+	}
 	number, err := trial.Number()
 	if err != nil {
 		return -1, err
 	}
-	jsonMetaPath := getMetaPath(number)
+	jsonMetaPath := fmt.Sprintf("./data/optuna/ffm-meta-%d.json", number)
 
-	cmd := exec.Command(
+	ctx := trial.GetContext()
+	cmd := exec.CommandContext(
+		ctx,
 		"./ffm-train",
 		"-p", "./data/valid2.txt",
 		"--auto-stop", "--auto-stop-threshold", "3",
 		"-l", fmt.Sprintf("%f", lmd),
 		"-r", fmt.Sprintf("%f", eta),
-		"-k", "4",
+		"-k", fmt.Sprintf("%d", latent),
 		"-t", "500",
 		"--json-meta", jsonMetaPath,
 		"./data/train2.txt",
@@ -89,6 +92,7 @@ func main() {
 	}
 	defer logger.Sync()
 
+	// setup storage
 	db, err := gorm.Open("sqlite3", "db.sqlite3")
 	if err != nil {
 		logger.Fatal("failed to open db", zap.Error(err))
@@ -97,6 +101,7 @@ func main() {
 	db.DB().SetMaxOpenConns(1)
 	storage := rdb.NewStorage(db)
 
+	// create a study
 	study, err := goptuna.LoadStudy(
 		"goptuna-libffm",
 		goptuna.StudyOptionStorage(storage),
@@ -107,27 +112,44 @@ func main() {
 		logger.Fatal("failed to create study", zap.Error(err))
 	}
 
-	eg, ctx := errgroup.WithContext(context.Background())
+	// create a context with cancel function
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	study.WithContext(ctx)
+
+	// set signal handler
+	sigch := make(chan os.Signal, 1)
+	defer close(sigch)
+	signal.Notify(sigch, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		sig, ok := <-sigch
+		if !ok {
+			return
+		}
+		cancel()
+		logger.Error("catch a kill signal", zap.String("signal", sig.String()))
+	} ()
+
+	// run optimize with context
 	for i := 0; i < runtime.NumCPU()-1; i++ {
-		eg.Go(func() error {
-			return study.Optimize(objective, 100)
-		})
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err := study.Optimize(objective, 1000 / runtime.NumCPU())
+			if err != nil {
+				logger.Error("optimize catch error", zap.Error(err))
+			}
+		} ()
 	}
-	if err := eg.Wait(); err != nil {
-		log.Fatalf("got error while optimize: %s", err)
-	}
+	wg.Wait()
 
-	v, err := study.GetBestValue()
-	if err != nil {
-		logger.Fatal("failed to get best value", zap.Error(err))
-	}
-	params, err := study.GetBestParams()
-	if err != nil {
-		logger.Fatal("failed to get best params", zap.Error(err))
-	}
-
-	fmt.Println("Result:")
-	fmt.Println("- best value", v)
-	fmt.Println("- best param", params)
+	// print best hyper-parameters and the result
+	v, _ := study.GetBestValue()
+	params, _ := study.GetBestParams()
+	logger.Info("result", zap.Float64("value", v),
+		zap.String("params", fmt.Sprintf("%#v", params)))
 }
