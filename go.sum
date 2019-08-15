@@ -13,6 +13,8 @@ github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/c-bata/goptuna v0.0.5-0.20190815083721-09b1d1193d32 h1:cS57Q5S2FkW8wEjlLJ3rKz5qmC7zCNAdnnrqs9/hEcQ=
 github.com/c-bata/goptuna v0.0.5-0.20190815083721-09b1d1193d32/go.mod h1:J3AP2Xo0+vHUTf7P8lQOwddOeSMkAFOmz6jrHSxsAcE=
+github.com/c-bata/goptuna v0.0.5-0.20190815091607-eecd140ce7ed h1:hSqNOrskKX03Tbxc9hGCIBAHhNEN6QWO0cs9q5bASBQ=
+github.com/c-bata/goptuna v0.0.5-0.20190815091607-eecd140ce7ed/go.mod h1:J3AP2Xo0+vHUTf7P8lQOwddOeSMkAFOmz6jrHSxsAcE=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
 github.com/coreos/go-etcd v2.0.0+incompatible/go.mod h1:Jez6KQU2B/sWsbdaef3ED8NzMklzPG4d5KIOhIy30Tk=
