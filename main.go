@@ -135,11 +135,12 @@ func main() {
 	} ()
 
 	// run optimize with context
-	for i := 0; i < runtime.NumCPU()-1; i++ {
+	concurrency := runtime.NumCPU() - 1
+	for i := 0; i < concurrency; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			err := study.Optimize(objective, 1000 / runtime.NumCPU())
+			err := study.Optimize(objective, 1000 / concurrency)
 			if err != nil {
 				logger.Error("optimize catch error", zap.Error(err))
 			}
